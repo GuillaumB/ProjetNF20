@@ -5,8 +5,7 @@
 import os
 import argparse
 
-# Fonctions
-
+# Main - Lancement des calculs
 def Main():
   '''Fonction Principal
   '''
@@ -22,9 +21,10 @@ def Main():
   graph = Parser(args.data)
   print(graph)
 
+# Fonctions
 def Parser(data):
-  '''Fonction permettant de parser le fichier .dat
-  pour obtenir la liste des points et arcs du graph
+  '''Fonction permettant de parser le fichier .dat  
+  Retourne la liste des arcs du graphe avec, dans l'ordre, le point de départ, le point d'arrivé et le poids de l'arête
   '''
 
   print("Parsing du fichier "+data)
@@ -66,6 +66,21 @@ def Parser(data):
 
   return listArcs # On retourne la liste des arcs avec, dans l'ordre, pt départ, pt arrivé, poids
 
+
+def Prim(graph):
+  '''Algorithme de Prim
+  Retourne la liste des sommets du chemin de cout minimum
+  '''
+
+  return []
+
+def Kruskal(graph):
+  '''Algorithme de Kruskal
+  Retourne la liste des sommets du chemin de cout minimum
+  '''
+
+  return []
+
 # On lance la fonction
 Main()
 
@@ -74,4 +89,7 @@ Temps Max Parsing
 100 sommets => 0.2s
 ... 
 1000 sommets => 17-18s
+
+
+Le Parsing en lui-même ne met pas bcp de temps, par contre l'affichage des valeurs est très long !!!
 '''
