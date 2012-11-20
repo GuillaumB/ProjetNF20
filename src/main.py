@@ -18,11 +18,17 @@ def Main():
   args = parser.parse_args()
 
   # Appel du parser de fichier
-  graph = Parser(args.data)
-  print(graph)
+  graph, sommet = Parser(args.data)
+  print graph
+
+  # Lancement de Prim
+  #result = Prim(graph, sommet)
+  #print("Arbre couvrant de poids minimun: "+str(result))
+
+#--------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Fonctions
-def Parser(data):
+def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne manquante/nom des sommet=lettre ou nombre/
   '''Fonction permettant de parser le fichier .dat  
   Retourne la liste des arcs du graphe avec, dans l'ordre, le point de départ, le point d'arrivé et le poids de l'arête
   '''
@@ -47,7 +53,10 @@ def Parser(data):
         temp = ligne.rstrip('\n\r').replace(" ","") # On dégage les espaces en trop
         temp = temp.split("\t") # On sépare les données grâce aux tabulation du fichier
         for i, value in enumerate(temp): # Permet de convertir les données
-          temp[i] = int(value)
+          if i == 2:
+            temp[i] = float(value)
+          else:
+            temp[i] = int(value)
         listArcs.append(temp)
 
     nbrLigne = nbrLigne+1
@@ -64,15 +73,51 @@ def Parser(data):
   #print("Nombre d'arcs: "+nbrEdge)
   #print("Liste des arcs: "+str(listArcs))
 
-  return listArcs # On retourne la liste des arcs avec, dans l'ordre, pt départ, pt arrivé, poids
+  return listArcs, nbrNode # On retourne la liste des arcs avec, dans l'ordre, pt départ, pt arrivé, poids
 
 
-def Prim(graph):
+def Prim(graph, nbrNode):
   '''Algorithme de Prim
   Retourne la liste des sommets du chemin de cout minimum
   '''
+  listCourtChemin = []
+  listSommetCourtChemin = []
+  listTempArete = []
+  pointDepart = graph[0][0]
 
-  return []
+  listCourtChemin.append(graph[0])
+  listSommetCourtChemin.append(graph[0][0])
+
+  #tailleListCourtchemin = len(listCourtChemin) #Debug
+  
+  while len(listCourtChemin) != int(nbrNode):
+    # On cherche tous les aretes sortant du point sur lequel on est
+    for i, value in enumerate(graph):
+      if listCourtChemin[len(listCourtChemin)-1][0] in graph[i]:
+        listTempArete.append(graph[i])
+    
+    # On cherche l'arete de poids minimum en verifiant que ça boucle pas
+    for i, value in enumerate(listTempArete):
+      if i == 0:
+        poidMini = listTempArete[i][2]
+      else:
+        if listTempArete[i][2]<poidMini:
+          if listCourtChemin[i][1] not in listSommetCourtChemin:
+            poidMini = listTempArete[i][2]
+            arcsSuivant = listTempArete[i]
+            pointSuivant = listTempArete[i][1]
+        
+
+    listCourtChemin.append(arcsSuivant)
+    listSommetCourtChemin.append(pointSuivant)
+    listTempArete = []
+    #tailleListCourtchemin = tailleListCourtchemin+1 #Debug
+    
+
+
+
+
+  return listCourtChemin
 
 def Kruskal(graph):
   '''Algorithme de Kruskal
