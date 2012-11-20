@@ -18,12 +18,21 @@ def Main():
   args = parser.parse_args()
 
   # Appel du parser de fichier
+<<<<<<< HEAD
   graph, sommet = Parser(args.data)
   print graph
 
   # Lancement de Prim
   #result = Prim(graph, sommet)
   #print("Arbre couvrant de poids minimun: "+str(result))
+=======
+  infoGraph = Parser(args.data)
+
+  Prim(infoGraph)
+
+  # Debug
+  #print(infoGraph)
+>>>>>>> e3d12cf5cb9b062705f03718f007d89e430a6086
 
 #--------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -33,7 +42,7 @@ def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne m
   Retourne la liste des arcs du graphe avec, dans l'ordre, le point de départ, le point d'arrivé et le poids de l'arête
   '''
 
-  print("Parsing du fichier "+data)
+  print("Parsing du fichier "+data+"\n")
   nbrLigne = 0
   listArcs = []
 
@@ -67,55 +76,72 @@ def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne m
   nbrNode = nbrNode.split("\t")[2].replace(" ","")
   nbrEdge = nbrEdge.split("\t")[2].replace(" ","")
 
-  # Affichage des infos - Debug
-  #print("Type de graphe: "+titreGraph)
-  #print("Nombre de Sommets: "+nbrNode)
-  #print("Nombre d'arcs: "+nbrEdge)
-  #print("Liste des arcs: "+str(listArcs))
 
-  return listArcs, nbrNode # On retourne la liste des arcs avec, dans l'ordre, pt départ, pt arrivé, poids
+  return {'Title': titreGraph, 'Nodes': nbrNode, 'Edges': nbrEdge, 'Arcs': listArcs}# On retourne un dictionnaire avec l'ensemble des info parser !
 
 
 def Prim(graph, nbrNode):
   '''Algorithme de Prim
   Retourne la liste des sommets du chemin de cout minimum
   '''
-  listCourtChemin = []
-  listSommetCourtChemin = []
-  listTempArete = []
-  pointDepart = graph[0][0]
 
-  listCourtChemin.append(graph[0])
-  listSommetCourtChemin.append(graph[0][0])
+  nbrNode = graph['Nodes']
+  listArcs = graph['Arcs']
+  usedEdges = []
+  usedArcs = []
+  tempArcs = []
+  arcToChoose = None
+  edgeToChoose = None
+  notToChoose = True
 
-  #tailleListCourtchemin = len(listCourtChemin) #Debug
   
-  while len(listCourtChemin) != int(nbrNode):
-    # On cherche tous les aretes sortant du point sur lequel on est
-    for i, value in enumerate(graph):
-      if listCourtChemin[len(listCourtChemin)-1][0] in graph[i]:
-        listTempArete.append(graph[i])
+  usedEdges.append(listArcs[0][0]) # On choisi un sommet duquel on commence le graphe
+
+  while len(usedEdges) < int(nbrNode): # tant qu'on est pas passé par tous les sommets
+    actualEdges = usedEdges[-1] # On choisi le dernier somment sur lequel on est arrivé
+
+    print("actualEdges "+str(actualEdges))
+
+    for i in listArcs:
+      if actualEdges in i:
+        tempArcs.append(i) # on liste l'ensemble des arcs sortant du poids actuel
+
+    print("tempArcs "+str(tempArcs))
+
+    tempMinWeight = listArcs[0][2] # On prend une valeur de poids parmis les arcs possible
     
-    # On cherche l'arete de poids minimum en verifiant que ça boucle pas
-    for i, value in enumerate(listTempArete):
-      if i == 0:
-        poidMini = listTempArete[i][2]
-      else:
-        if listTempArete[i][2]<poidMini:
-          if listCourtChemin[i][1] not in listSommetCourtChemin:
-            poidMini = listTempArete[i][2]
-            arcsSuivant = listTempArete[i]
-            pointSuivant = listTempArete[i][1]
-        
+    for i, value in enumerate(tempArcs):
+      if value[2] <= tempMinWeight: # Si le poids de l'arete teste est inférieur ou egale au poids référence alors on mémorise le poid l'arete et le futur sommet
+        tempMinWeight = value[2] 
+        arcToChoose = value
 
-    listCourtChemin.append(arcsSuivant)
-    listSommetCourtChemin.append(pointSuivant)
-    listTempArete = []
-    #tailleListCourtchemin = tailleListCourtchemin+1 #Debug
-    
+        if value[0] == actualEdges:
+          edgeToChoose = value[1]
+        else:
+          edgeToChoose = value[0]
+
+    print edgeToChoose
+
+    usedEdges.append(edgeToChoose)
+    usedArcs.append(arcToChoose)
+    '''
+    if edgeToChoose not in usedEdges: # On verifie que le sommet choisi ne boucle pas 
+      usedEdges.append(edgeToChoose)
+      usedArcs.append(arcToChoose)
+    else:
+      notToChoose = edgeToChoose
+    '''
+    print("tempMinWeight "+str(tempMinWeight))
+    print("notToChoose "+str(notToChoose)) 
+    #print arcToChoose
+    #print edgeToChoose
+    print("usedEdges "+str(usedEdges)+"\n") 
 
 
-
+    # Reset
+    tempArcs = []
+    arcToChoose = None
+    edgeToChoose = None
 
   return listCourtChemin
 
@@ -127,7 +153,10 @@ def Kruskal(graph):
   return []
 
 # On lance la fonction
-Main()
+if __name__ == '__main__':
+  Main()
+
+
 
 '''
 Temps Max Parsing
@@ -137,4 +166,8 @@ Temps Max Parsing
 
 
 Le Parsing en lui-même ne met pas bcp de temps, par contre l'affichage des valeurs est très long !!!
+
+Some help :)
+
+http://programmingpraxis.com/2010/04/09/minimum-spanning-tree-prims-algorithm/
 '''
