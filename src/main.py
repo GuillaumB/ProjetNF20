@@ -5,6 +5,7 @@
 import os
 import argparse
 
+
 # Main - Lancement des calculs
 def Main():
   '''Fonction Principal
@@ -18,21 +19,19 @@ def Main():
   args = parser.parse_args()
 
   # Appel du parser de fichier
-<<<<<<< HEAD
-  graph, sommet = Parser(args.data)
-  print graph
+  infoGraph = Parser(args.data)
 
   # Lancement de Prim
   #result = Prim(graph, sommet)
   #print("Arbre couvrant de poids minimun: "+str(result))
-=======
-  infoGraph = Parser(args.data)
 
-  Prim(infoGraph)
-
+  result = Prim(infoGraph)
+ 
+  print("result "+str(result)) 
+  
   # Debug
   #print(infoGraph)
->>>>>>> e3d12cf5cb9b062705f03718f007d89e430a6086
+
 
 #--------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -80,7 +79,7 @@ def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne m
   return {'Title': titreGraph, 'Nodes': nbrNode, 'Edges': nbrEdge, 'Arcs': listArcs}# On retourne un dictionnaire avec l'ensemble des info parser !
 
 
-def Prim(graph, nbrNode):
+def Prim(graph):
   '''Algorithme de Prim
   Retourne la liste des sommets du chemin de cout minimum
   '''
@@ -103,12 +102,12 @@ def Prim(graph, nbrNode):
     print("actualEdges "+str(actualEdges))
 
     for i in listArcs:
-      if actualEdges in i:
+      if actualEdges in i and i not in usedArcs:
         tempArcs.append(i) # on liste l'ensemble des arcs sortant du poids actuel
 
     print("tempArcs "+str(tempArcs))
 
-    tempMinWeight = listArcs[0][2] # On prend une valeur de poids parmis les arcs possible
+    tempMinWeight = tempArcs[0][2] # On prend une valeur de poids parmis les arcs possible
     
     for i, value in enumerate(tempArcs):
       if value[2] <= tempMinWeight: # Si le poids de l'arete teste est inférieur ou egale au poids référence alors on mémorise le poid l'arete et le futur sommet
@@ -120,22 +119,17 @@ def Prim(graph, nbrNode):
         else:
           edgeToChoose = value[0]
 
-    print edgeToChoose
+    print("edgeToChoose "+str(edgeToChoose)+"\n")
 
     usedEdges.append(edgeToChoose)
-    usedArcs.append(arcToChoose)
-    '''
-    if edgeToChoose not in usedEdges: # On verifie que le sommet choisi ne boucle pas 
-      usedEdges.append(edgeToChoose)
-      usedArcs.append(arcToChoose)
-    else:
-      notToChoose = edgeToChoose
-    '''
-    print("tempMinWeight "+str(tempMinWeight))
-    print("notToChoose "+str(notToChoose)) 
+    usedArcs.append(arcToChoose)    
+    
+    
+    #print("tempMinWeight "+str(tempMinWeight))
+    #print("notToChoose "+str(notToChoose)) 
     #print arcToChoose
     #print edgeToChoose
-    print("usedEdges "+str(usedEdges)+"\n") 
+    #print("usedEdges "+str(usedEdges)+"\n") 
 
 
     # Reset
@@ -143,7 +137,7 @@ def Prim(graph, nbrNode):
     arcToChoose = None
     edgeToChoose = None
 
-  return listCourtChemin
+  return {'Edges': usedEdges, 'Arcs': usedArcs}
 
 def Kruskal(graph):
   '''Algorithme de Kruskal
@@ -151,6 +145,7 @@ def Kruskal(graph):
   '''
 
   return []
+
 
 # On lance la fonction
 if __name__ == '__main__':
