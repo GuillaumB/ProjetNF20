@@ -83,7 +83,7 @@ def Prim(graph):
   '''Algorithme de Prim
   Retourne la liste des sommets du chemin de cout minimum
   '''
-
+  
   nbrNode = graph['Nodes']
   listArcs = graph['Arcs']
   usedEdges = []
@@ -124,13 +124,11 @@ def Prim(graph):
     usedEdges.append(edgeToChoose)
     usedArcs.append(arcToChoose)    
     
-    
     #print("tempMinWeight "+str(tempMinWeight))
     #print("notToChoose "+str(notToChoose)) 
     #print arcToChoose
     #print edgeToChoose
     #print("usedEdges "+str(usedEdges)+"\n") 
-
 
     # Reset
     tempArcs = []
