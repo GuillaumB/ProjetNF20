@@ -21,9 +21,9 @@ def Main():
   # Appel du parser de fichier
   infoGraph = Parser(args.data)
 
-  # Lancement de Prim
-  #result = Prim(graph, sommet)
-  #print("Arbre couvrant de poids minimun: "+str(result))
+  newGraph = Prim(infoGraph)
+
+  print(newGraph)
 
   result = Prim(infoGraph)
  
@@ -36,11 +36,16 @@ def Main():
 #--------------------------------------------------------------------------------------------------------------------------------------------#
 
 # Fonctions
-def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne manquante/nom des sommet=lettre ou nombre/
-  '''Fonction permettant de parser le fichier .dat  
-  Retourne la liste des arcs du graphe avec, dans l'ordre, le point de départ, le point d'arrivé et le poids de l'arête
-  '''
+def Error(msg):
+  """Affiche un meesage d'erreur et quitte l'application
+  """
+  print(msg)
+  quit()
 
+
+def Parser(data):
+  """Fonction permettant de parser le fichier .dat  
+  """
   print("Parsing du fichier "+data+"\n")
   nbrLigne = 0
   listArcs = []
@@ -49,11 +54,25 @@ def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne m
 
   for ligne in fichier:
     if nbrLigne==0: # On extrait le type de graph
-      titreGraph = ligne.rstrip('\n\r')
+      if ligne.lower().find("graph")>=0:
+        typeGraph = ligne.rstrip('\n\r')
+      else:
+        Error("Erreur de Formatage : Type de Graphe")
+
     elif nbrLigne==1: # On extrait le nombre de sommet
-      nbrNode = ligne.rstrip('\n\r')
+      if ligne.lower().find("nb_nodes")>=0:
+        nbrNode = ligne.rstrip('\n\r')
+        nbrNode = nbrNode.split("\t")[2].replace(" ","")
+      else:
+        Error("Erreur de Formatage : Nombre de Sommets")
+
     elif nbrLigne == 2: # On extrait le nombre d'arcs
-      nbrEdge = ligne.rstrip('\n\r')
+      if ligne.lower().find("nb_edges")>=0:
+        nbrEdge = ligne.rstrip('\n\r')
+        nbrEdge = nbrEdge.split("\t")[2].replace(" ","")
+      else:
+        Error("Erreur de Formatage : Nombre d'Arcs")
+
     elif nbrLigne>3: # liste des arcs
       if ligne.rstrip('\n\r') == "END": # Fin des données, on sort de la boucle
         break
@@ -61,89 +80,87 @@ def Parser(data): # Voir pour la sécurisation du Parsing des données - Ligne m
         temp = ligne.rstrip('\n\r').replace(" ","") # On dégage les espaces en trop
         temp = temp.split("\t") # On sépare les données grâce aux tabulation du fichier
         for i, value in enumerate(temp): # Permet de convertir les données
-          if i == 2:
-            temp[i] = float(value)
+          if i != 0 and i%2 == 0:
+            try:
+              temp[i] = float(value)
+            except ValueError:
+              Error("Oops ! Il doit y avoir une erreur dans les valeurs du poids des arcs !")
           else:
-            temp[i] = int(value)
+            temp[i] = value
+
         listArcs.append(temp)
 
     nbrLigne = nbrLigne+1
 
   fichier.close() # Fermeture du fichier
 
-  # traitement des variables
-  nbrNode = nbrNode.split("\t")[2].replace(" ","")
-  nbrEdge = nbrEdge.split("\t")[2].replace(" ","")
 
-
-  return {'Title': titreGraph, 'Nodes': nbrNode, 'Edges': nbrEdge, 'Arcs': listArcs}# On retourne un dictionnaire avec l'ensemble des info parser !
+  return {'Title': typeGraph, 'Nodes': nbrNode, 'Edges': nbrEdge, 'Arcs': listArcs}# On retourne un dictionnaire avec l'ensemble des info parser !
 
 
 def Prim(graph):
-  '''Algorithme de Prim
-  Retourne la liste des sommets du chemin de cout minimum
-  '''
-  
+  """Algorithme de Prim
+  Retourne la liste des sommets du chemin de cout minimum et la liste des arcs qui composent le nouveau graphe 
+  """
+
   nbrNode = graph['Nodes']
   listArcs = graph['Arcs']
   usedEdges = []
   usedArcs = []
+
   tempArcs = []
+  
   arcToChoose = None
   edgeToChoose = None
-  notToChoose = True
 
-  
-  usedEdges.append(listArcs[0][0]) # On choisi un sommet duquel on commence le graphe
+  usedEdges.append(listArcs[0][0]) # On choisi un sommet pour on commence le graphe
 
   while len(usedEdges) < int(nbrNode): # tant qu'on est pas passé par tous les sommets
-    actualEdges = usedEdges[-1] # On choisi le dernier somment sur lequel on est arrivé
+    actualEdge = usedEdges[-1] # On choisi le dernier somment sur lequel on est arrivé
 
-    print("actualEdges "+str(actualEdges))
+    #print("actualEdges "+actualEdge)
 
     for i in listArcs:
-      if actualEdges in i and i not in usedArcs:
-        tempArcs.append(i) # on liste l'ensemble des arcs sortant du poids actuel
+      if actualEdge in i:
+        tempArcs.append(i) # on liste l'ensemble des arcs sortant du point actuel et qui ne va pas vers point déjà utilisé
 
-    print("tempArcs "+str(tempArcs))
+
+    for j in usedArcs: # on enlève des arcs possible les arcs sur lesquels on est déjà passés
+      if j in tempArcs:
+        tempArcs.remove(j)
+
+    #print(tempArcs)
 
     tempMinWeight = tempArcs[0][2] # On prend une valeur de poids parmis les arcs possible
-    
+
     for i, value in enumerate(tempArcs):
       if value[2] <= tempMinWeight: # Si le poids de l'arete teste est inférieur ou egale au poids référence alors on mémorise le poid l'arete et le futur sommet
         tempMinWeight = value[2] 
         arcToChoose = value
+        edgeToChoose = value[1]
 
-        if value[0] == actualEdges:
+        if value[0] == actualEdge:
           edgeToChoose = value[1]
         else:
           edgeToChoose = value[0]
-
-    print("edgeToChoose "+str(edgeToChoose)+"\n")
-
+        
     usedEdges.append(edgeToChoose)
-    usedArcs.append(arcToChoose)    
+    usedArcs.append(arcToChoose)
     
-    #print("tempMinWeight "+str(tempMinWeight))
-    #print("notToChoose "+str(notToChoose)) 
-    #print arcToChoose
-    #print edgeToChoose
-    #print("usedEdges "+str(usedEdges)+"\n") 
-
     # Reset
     tempArcs = []
     arcToChoose = None
     edgeToChoose = None
 
-  return {'Edges': usedEdges, 'Arcs': usedArcs}
+
+  return {'Edges':usedEdges, 'Arcs': usedArcs}
 
 def Kruskal(graph):
-  '''Algorithme de Kruskal
+  """Algorithme de Kruskal
   Retourne la liste des sommets du chemin de cout minimum
-  '''
+  """
 
   return []
-
 
 # On lance la fonction
 if __name__ == '__main__':
@@ -152,12 +169,6 @@ if __name__ == '__main__':
 
 
 '''
-Temps Max Parsing
-100 sommets => 0.2s
-... 
-1000 sommets => 17-18s
-
-
 Le Parsing en lui-même ne met pas bcp de temps, par contre l'affichage des valeurs est très long !!!
 
 Some help :)
