@@ -121,7 +121,7 @@ def PrimUndirected(graph):
   arcToChoose = None
   edgeToChoose = None
 
-  usedEdges.append(listArcs[0][0]) # On choisi un sommet pour on commence le graphe
+  usedEdges.append(listArcs[0][0]) # On choisi un sommet pour commencer le graphe
 
   while len(usedEdges) < int(nbrNode): # tant qu'on est pas passé par tous les sommets
     actualEdge = usedEdges[-1] # On choisi le dernier somment sur lequel on est arrivé
@@ -161,7 +161,7 @@ def PrimUndirected(graph):
     edgeToChoose = None
 
 
-  return {'Edges':usedEdges, 'Arcs': usedArcs}
+  return {'Edges': usedEdges, 'Arcs': usedArcs}
 
 def PrimDirected(graph):
   """Algorithme de Prim pour les graphes orientés
