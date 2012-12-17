@@ -5,6 +5,9 @@
 import os
 import argparse
 
+from disjointset import DisjointSet 
+
+from operator import itemgetter
 
 # Main - Lancement des calculs
 def Main():
@@ -15,18 +18,22 @@ def Main():
   # Création du parser d'aguments
   parser = argparse.ArgumentParser(description="Script Arguments Parser")
   parser.add_argument("-d", "--data", dest="data", type=str, action="store", default="No Path", help="Relative path to the data file")
+  parser.add_argument("-P", "--Prim", dest="activePrim", action="store_true", default=False, help="Active Prim Algorithme")
+  parser.add_argument("-K", "--Kruskal", dest="activeKruskal", action="store_true", default=False, help="Active Kruskal Algorithme")
 
   args = parser.parse_args()
 
   # Appel du parser de fichier
-  infoGraph = Parser(args.data)
+  graph = Parser(args.data)
 
-  result = Prim(infoGraph)
- 
-  print("result "+str(result)) 
+  if args.activePrim:
+    print("Prim : "+str(Prim(graph)))
+
+  if args.activeKruskal:
+    print("Kruskal : "+str(Kruskal(graph)))
   
-  # Debug
-  #print(infoGraph)
+  if not args.activePrim and not args.activeKruskal:
+    print("Resultat du Parser : "+str(graph))
 
 
 #--------------------------------------------------------------------------------------------------------------------------------------------#
@@ -44,7 +51,8 @@ def Parser(data):
   """
   print("Parsing du fichier "+data+"\n")
   nbrLigne = 0
-  listArcs = []
+  edges = []
+  nodes = []
 
   fichier = open(data, 'r') # Ouverture du fichier
 
@@ -84,35 +92,27 @@ def Parser(data):
               Error("Oops ! Il doit y avoir une erreur dans les valeurs du poids des arcs !")
           else:
             temp[i] = value
+            if value not in nodes:
+              nodes.append(value)
 
-        listArcs.append(temp)
+        edges.append(temp)
 
-    nbrLigne = nbrLigne+1
+    nbrLigne +=1
 
   fichier.close() # Fermeture du fichier
 
+  nodes.sort()
 
-  return {'Type': typeGraph, 'Nodes': nbrNode, 'Edges': nbrEdge, 'Arcs': listArcs}# On retourne un dictionnaire avec l'ensemble des info parser !
+  return {'Type': typeGraph, 'Nodes': nodes, 'Edges': edges}# On retourne un dictionnaire avec l'ensemble des info parser !
 
 
 def Prim(graph):
-  if graph['Type'].upper() == "UNDIRECTED GRAPH":
-    return PrimUndirected(graph)
-
-  elif graph['Type'].upper() == "DIRECTED GRAPH":
-    return PrimDirected(graph)
-
-  else:
-    print("Type de Graphe inconnu !")
-    quit()
-
-def PrimUndirected(graph):
-  """Algorithme de Prim pour les graphes non-orientés
+  """Algorithme de Prim
   Retourne la liste des sommets du chemin de cout minimum et la liste des arcs qui composent le nouveau graphe 
   """
 
-  nbrNode = graph['Nodes']
-  listArcs = graph['Arcs']
+  nbrNode = len(graph['Nodes'])
+  listArcs = graph['Edges']
   usedEdges = []
   usedArcs = []
 
@@ -147,10 +147,16 @@ def PrimUndirected(graph):
         arcToChoose = value
         edgeToChoose = value[1]
 
-        if value[0] == actualEdge:
-          edgeToChoose = value[1]
-        else:
-          edgeToChoose = value[0]
+        if graph['Type'].upper() == "UNDIRECTED GRAPH":
+          # On vérifie que le sommet choisi n'est pas le sommet actuel si oui on prend l'autre
+          if value[0] == actualEdge:
+            edgeToChoose = value[1]
+          else:
+            edgeToChoose = value[0]
+
+        if graph['Type'].upper() == "DIRECTED GRAPH":
+          # L'ordre des sommets importent 
+          pass
         
     usedEdges.append(edgeToChoose)
     usedArcs.append(arcToChoose)
@@ -160,57 +166,6 @@ def PrimUndirected(graph):
     arcToChoose = None
     edgeToChoose = None
 
-
-  return {'Edges':usedEdges, 'Arcs': usedArcs}
-
-def PrimDirected(graph):
-  """Algorithme de Prim pour les graphes orientés
-  Retourne la liste des sommets du chemin de cout minimum et la liste des arcs qui composent le nouveau graphe 
-  """
-
-  nbrNode = graph['Nodes']
-  listArcs = graph['Arcs']
-  usedEdges = []
-  usedArcs = []
-
-  tempArcs = []
-  
-  arcToChoose = None
-  edgeToChoose = None
-
-  usedEdges.append(listArcs[0][0]) # On choisi un sommet pour on commence le graphe
-
-  while len(usedEdges) < int(nbrNode): # tant qu'on est pas passé par tous les sommets
-    actualEdge = usedEdges[-1] # On choisi le dernier somment sur lequel on est arrivé
-
-    #print("actualEdges "+actualEdge)
-
-    for i in listArcs:
-      if actualEdge in i:
-        tempArcs.append(i) # on liste l'ensemble des arcs sortant du point actuel et qui ne va pas vers point déjà utilisé
-
-
-    for j in usedArcs: # on enlève des arcs possible les arcs sur lesquels on est déjà passés
-      if j in tempArcs:
-        tempArcs.remove(j)
-
-    #print(tempArcs)
-
-    tempMinWeight = tempArcs[0][2] # On prend une valeur de poids parmis les arcs possible
-
-    for i, value in enumerate(tempArcs):
-      if value[2] <= tempMinWeight: # Si le poids de l'arete teste est inférieur ou egale au poids référence alors on mémorise le poid l'arete et le futur sommet
-        tempMinWeight = value[2] 
-        arcToChoose = value
-        edgeToChoose = value[1]
-        
-    usedEdges.append(edgeToChoose)
-    usedArcs.append(arcToChoose)
-    
-    # Reset
-    tempArcs = []
-    arcToChoose = None
-    edgeToChoose = None
 
   return {'Edges':usedEdges, 'Arcs': usedArcs}
 
@@ -219,18 +174,32 @@ def Kruskal(graph):
   Retourne la liste des sommets du chemin de cout minimum
   """
 
-  return []
+  forest = DisjointSet()
+  mst = []
+
+  for n in graph['Nodes']:
+    forest.add(n)
+
+  size = len(graph['Nodes']) - 1
+
+
+  for arc in sorted(graph['Edges'], key=itemgetter(2)):
+    n1, n2, poids = arc
+
+    t1 = forest.find(n1)
+    t2 = forest.find(n2)
+
+    if t2 != t1:
+      mst.append(arc)
+      size -= 1
+
+      if size == 0:
+        return mst
+
+      forest.union(t1, t2)
+
 
 # On lance la fonction
 if __name__ == '__main__':
   Main()
 
-
-
-'''
-Le Parsing en lui-même ne met pas bcp de temps, par contre l'affichage des valeurs est très long !!!
-
-Some help :)
-
-http://programmingpraxis.com/2010/04/09/minimum-spanning-tree-prims-algorithm/
-'''
