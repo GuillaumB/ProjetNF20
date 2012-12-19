@@ -27,12 +27,14 @@ def Main():
   graph = Parser(args.data)
 
   if args.activePrim:
+    print("Lancement de Prim")
     resultPrim = Prim(graph)
     poidsPrim = CompterPoids(resultPrim)
     print("Prim : "+str(resultPrim))
     print("pour un poids de "+str(poidsPrim))
 
   if args.activeKruskal:
+    print("Lancement de Kruskal")
     resultKruskal = Kruskal(graph)
     poidsKruskal = CompterPoids(resultKruskal)
     print("Kruskal : "+str(resultKruskal))
@@ -203,7 +205,7 @@ def Prim(graph):
       if forest[node] in usedNodes: # On cherche tous les sommets dont le père fait parti des sommet déjà parcouru
         tempNodes.append(node)
 
-    for node in tempNodes:
+    for node in tempNodes: # A AMELIORER !! SOURCE DE PERTE DE TEMPS !!!!
       for edge in graph['Edges']:
         if node in edge and edge not in chemin:
           tempEdges.append(edge)
