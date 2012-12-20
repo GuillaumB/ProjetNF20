@@ -180,8 +180,9 @@ def Kruskal(graph):
   for n in graph['Nodes']:
     forest.add(n)
 
-  size = len(graph['Nodes']) - 1
+  print forest
 
+  size = len(graph['Nodes']) - 1
 
   for arc in sorted(graph['Edges'], key=itemgetter(2)):
     n1, n2, poids = arc
