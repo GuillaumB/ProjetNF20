@@ -20,6 +20,7 @@ def Main():
   parser.add_argument("-d", "--data", dest="data", type=str, action="store", default="No Path", help="Relative path to the data file")
   parser.add_argument("-P", "--Prim", dest="activePrim", action="store_true", default=False, help="Active Prim Algorithme")
   parser.add_argument("-K", "--Kruskal", dest="activeKruskal", action="store_true", default=False, help="Active Kruskal Algorithme")
+  parser.add_argument("-D", "--Diametre", dest="activeDiametre", action="store_true", default=False, help="Active Diametre")
 
   args = parser.parse_args()
 
@@ -28,23 +29,29 @@ def Main():
 
   if args.activePrim:
     print("Lancement de Prim")
-    resultPrim = Prim(graph)
+    #resultPrim = Prim(graph)
+    resultPrim = PrimCours(graph)
     poidsPrim = CompterPoids(resultPrim)
     print("Prim : "+str(resultPrim))
     print("pour un poids de "+str(poidsPrim))
 
   if args.activeKruskal:
     print("Lancement de Kruskal")
-    resultKruskal = Kruskal(graph)
+    #resultKruskal = Kruskal(graph)
+    resultKruskal = KruskalCours(graph)
     poidsKruskal = CompterPoids(resultKruskal)
     print("Kruskal : "+str(resultKruskal))
     print("pour un poids de "+str(poidsKruskal))
 
-  if not args.activePrim and not args.activeKruskal:
+  if args.activeDiametre:
+    resultDiam = Diametre(graph)
+    print("Diamètre : "+str(resultDiam))
+
+  if not args.activePrim and not args.activeKruskal and not args.activeDiametre:
     print("Resultat du Parser : "+str(graph))
 
 
-#--------------------------------------------------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------#
 
 # Fonctions
 def Error(msg):
@@ -120,65 +127,56 @@ def CompterPoids(liste):
 
   return poids
 
-def PrimOld(graph):
-  """Algorithme de Prim
-  Retourne la liste des sommets du chemin de cout minimum et la liste des arcs qui composent le nouveau graphe 
-  """
+#======================================================================#
 
-  nbrNode = len(graph['Nodes'])
-  listArcs = graph['Edges']
-  usedEdges = []
-  usedArcs = []
+def PrimCours(graph):
+  chemin = []
+  forest = []
+  possibleEdges = []
+  pere = {}
 
-  tempArcs = []
-  
-  arcToChoose = None
-  edgeToChoose = None
+  listNodes = graph['Nodes']
+  listEdges = graph['Edges']
 
-  usedEdges.append(listArcs[0][0]) # On choisi un sommet pour commencer le graphe
+  for node in listNodes:
+    pere[node] = node
 
-  while len(usedEdges) < int(nbrNode): # tant qu'on est pas passé par tous les sommets
-    actualEdge = usedEdges[-1] # On choisi le dernier somment sur lequel on est arrivé
+  origin = listNodes[0]
 
-    for i in listArcs:
-      if actualEdge in i:
-        tempArcs.append(i) # on liste l'ensemble des arcs sortant du point actuel et qui ne va pas vers point déjà utilisé
+  nbrNode = len(listNodes)-1
 
-    for j in usedArcs: # on enlève des arcs possible les arcs sur lesquels on est déjà passés
-      if j in tempArcs:
-        tempArcs.remove(j)
+  while nbrNode != 0:
 
-    tempMinWeight = tempArcs[0][2] # On prend une valeur de poids parmis les arcs possible
+    for node in listNodes:
+      if pere[node] == origin and node not in forest:
+        forest.append(node)
 
-    for i, value in enumerate(tempArcs):
-      if value[2] <= tempMinWeight: # Si le poids de l'arete teste est inférieur ou egale au poids référence alors on mémorise le poid l'arete et le futur sommet
-        tempMinWeight = value[2] 
-        arcToChoose = value
-        edgeToChoose = value[1]
+    for edge in listEdges:
+      n1, n2, p = edge
+   
+      if (n1 in forest and n2 not in forest) or (n1 not in forest and n2 in forest):
+        possibleEdges.append(edge)
 
-        if graph['Type'].upper() == "UNDIRECTED GRAPH":
-          # On vérifie que le sommet choisi n'est pas le sommet actuel si oui on prend l'autre
-          if value[0] == actualEdge:
-            edgeToChoose = value[1]
-          else:
-            edgeToChoose = value[0]
+    possibleEdges = sorted(possibleEdges, key=itemgetter(2))
 
-        if graph['Type'].upper() == "DIRECTED GRAPH":
-          # L'ordre des sommets importent 
-          pass
-        
-    usedEdges.append(edgeToChoose)
-    usedArcs.append(arcToChoose)
-    
-    # Reset
-    tempArcs = []
-    arcToChoose = None
-    edgeToChoose = None
+    edgeTochoose = possibleEdges[0]
+    chemin.append(edgeTochoose)
+    listEdges.remove(edgeTochoose)
 
-  # return {'Edges': usedEdges, 'Arcs': usedArcs}
-  return usedArcs
+    t1, t2, _ = edgeTochoose
 
-def Prim(graph):
+    if t1 in forest:
+      pere[t2] = pere[t1]
+    else:
+      pere[t1] = pere[t2]
+
+    nbrNode -= 1
+
+    possibleEdges = []
+
+  return chemin
+
+def Prim(graph): # A revoir totalement avec tas binaire minimun ou fibonacci
   """Algorithme de Prim + Union-Find
   Retourne la liste des arretes du graphe de coût minimum
   """
@@ -227,6 +225,30 @@ def Prim(graph):
 
   return chemin
 
+#======================================================================#
+
+def KruskalCours(graph):
+  chemin = []
+  arbres = {}
+
+  for node in graph['Nodes']:
+    arbres[node] = node
+
+  listEdges = sorted(graph['Edges'], key=itemgetter(2)) 
+
+  while(len(chemin)<len(graph['Nodes'])-1):
+    edgeTochoose = listEdges[0]
+    listEdges.remove(edgeTochoose)
+
+    n1, n2, p = edgeTochoose
+
+    if arbres[n1] != arbres[n2]:
+      chemin.append(edgeTochoose)
+
+      arbres[n2] = arbres[n1]
+
+  return chemin
+
 def Kruskal(graph):
   """Algorithme de Kruskal
   Retourne la liste des arretes du graphe de coût minimum
@@ -240,7 +262,7 @@ def Kruskal(graph):
 
   nbrNodes = len(graph['Nodes']) - 1
 
-  for arc in sorted(graph['Edges'], key=itemgetter(2)):
+  for arc in sorted(graph['Edges'], key=itemgetter(2)): #O( --- )
     n1, n2, poids = arc
 
     t1 = forest.find(n1)
@@ -255,7 +277,76 @@ def Kruskal(graph):
 
       forest.union(t1, t2)
 
+#======================================================================#
 
+def Diametre(graph):
+  """Double recherche en largeur
+  retourne ...
+  """
+  diametre = []
+  adj = []
+  parcouru = {}  
+
+  listNodes = graph['Nodes']
+  listEdges = graph['Edges']
+
+
+  # Premier Parcours pour trouver une extrémité du graphe
+  for node in listNodes:
+    parcouru[node] =  False
+
+  actual = listNodes[0]
+  parcouru[actual] = True
+
+  diametre.append(actual)
+
+  while len(diametre) != len(listNodes):
+    
+    for edge in listEdges:
+      if actual in edge:
+        if edge[0] == actual:
+          adj.append(edge[1])
+        else:
+          adj.append(edge[0])
+
+    for node in adj:
+      if not parcouru[node]:
+        parcouru[node] = True
+        diametre.append(node)
+
+    actual = diametre[-1]
+
+  # Second parcours pour trouver le diametre du graphe
+  first = diametre[-1]
+  diametre = []
+
+  for node in listNodes:
+    parcouru[node] =  False
+
+  actual = first
+  parcouru[actual] = True
+
+  diametre.append(actual)
+
+  while len(diametre) != len(listNodes):
+    
+    for edge in listEdges:
+      if actual in edge:
+        if edge[0] == actual:
+          adj.append(edge[1])
+        else:
+          adj.append(edge[0])
+
+    for node in adj:
+      if not parcouru[node]:
+        parcouru[node] = True
+        diametre.append(node)
+
+    actual = diametre[-1]
+
+  return diametre
+
+#----------------------------------------------------------------------#
 # On lance la fonction
 if __name__ == '__main__':
   Main()
